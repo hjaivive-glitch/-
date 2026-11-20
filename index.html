@@ -1,0 +1,70 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하루 한 문장</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#18243a;font:18px/1.6 system-ui,-apple-system,"맑은 고딕",sans-serif;overflow-wrap:anywhere}header{background:#283d78;color:white;padding:30px 0}main,.wrap{width:min(100% - 32px,760px);margin:auto}h1{font-size:clamp(30px,7vw,42px);line-height:1.25;margin:0}header p{margin:8px 0 0}main{padding:24px 0 48px}section{background:white;border:1px solid #dce2ee;border-radius:16px;padding:22px;margin-bottom:18px}h2{font-size:24px;margin:0 0 12px}h3{font-size:20px;margin:20px 0 8px}p{margin:8px 0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.tabs button{flex:1 1 auto}button{font:inherit;font-weight:700;border:2px solid #364e8c;border-radius:10px;padding:10px 15px;min-height:48px;background:white;color:#263e7b;cursor:pointer}button[aria-pressed=true],.primary{background:#304a8a;color:white}button:focus-visible,input:focus-visible{outline:3px solid #e79b22;outline-offset:3px}.sentence{font-size:clamp(25px,6vw,34px);font-weight:750;line-height:1.4;margin:8px 0}.translation{font-size:20px}.hint{font-size:16px;color:#49576d}.vocab{list-style:none;margin:0;padding:0}.vocab li{padding:10px 0;border-bottom:1px solid #e4e9f1}.vocab strong{color:#263e7b}.example{padding:12px 14px;background:#f1f4fb;border-radius:10px;margin:10px 0}.example p{margin:3px 0}.exercise{padding:14px;background:#f5f7fb;border-radius:10px;margin:12px 0}.exercise label{display:block;font-weight:700}.exercise input{width:min(100%,340px);min-height:48px;border:2px solid #77849c;border-radius:8px;padding:8px 12px;font:inherit;margin-top:8px}.result{font-weight:700;margin:8px 0}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.status{min-height:1.6em;color:#623b00}footer{font-size:15px;color:#536077;padding-bottom:30px}@media(max-width:400px){section{padding:18px}.tabs button{flex:1 1 28%}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>하루 한 문장</h1><p>매일 한 문장씩, 듣고 따라 말해 보세요.</p></div></header>
+<main>
+<p id="today"></p><p class="hint">기기의 날짜에 따라 오늘의 문장이 바뀝니다. 언어별 문장은 예시 3개가 순환합니다.</p>
+<nav class="tabs" aria-label="언어 선택" id="languages"></nav>
+<section><h2>오늘의 문장</h2><p class="sentence" id="sentence" lang="en"></p><p class="translation" id="translation"></p><p class="hint" id="pronunciation"></p><div class="actions"><button class="primary" id="listen" type="button">🔊 문장 듣기</button><button id="slow" type="button">천천히 듣기</button></div><p class="status" id="voice-status" role="status"></p><p class="hint">기기의 음성 기능을 사용합니다. 해당 언어 음성이 없으면 발음이 다르거나 재생되지 않을 수 있습니다.</p></section>
+<section><h2>단어 뜻</h2><p class="hint">문장 속 단어와 표현을 순서대로 살펴보세요.</p><ul class="vocab" id="vocab"></ul></section>
+<section><h2>중요 단어 응용하기</h2><div id="examples"></div></section>
+<section><h2>빈칸 채우기</h2><p>오늘의 문장을 떠올리며 빈칸을 채워 보세요.</p><form id="quiz"><div id="questions"></div><div class="actions"><button class="primary" type="submit">정답 확인</button><button type="button" id="show-answer">정답 보기</button><button type="button" id="reset">다시 풀기</button></div><p class="result" id="result" aria-live="polite"></p></form></section>
+</main><footer class="wrap">학습용 예시 문장입니다. 발음은 기기와 브라우저에 따라 달라질 수 있습니다.</footer>
+<script>
+const data = {
+  en:{name:'영어',lang:'en-US',items:[
+    {s:'I drink coffee every morning.',t:'나는 매일 아침 커피를 마셔요.',p:'아이 드링크 커피 에브리 모닝',words:[['I','나는'],['drink','마시다'],['coffee','커피'],['every','매~마다'],['morning','아침']],key:'drink',examples:[['I drink water.','나는 물을 마셔요.'],['We drink tea.','우리는 차를 마셔요.']],q:[['I ___ coffee every morning.','drink'],['I drink coffee every ___.','morning']]},
+    {s:'I walk in the park.',t:'나는 공원에서 걸어요.',p:'아이 워크 인 더 파크',words:[['I','나는'],['walk','걷다'],['in','~에서'],['the','그'],['park','공원']],key:'walk',examples:[['We walk together.','우리는 함께 걸어요.'],['I walk to school.','나는 학교까지 걸어요.']],q:[['I ___ in the park.','walk'],['I walk in the ___.','park']]},
+    {s:'Today is a good day.',t:'오늘은 좋은 날이에요.',p:'투데이 이즈 어 굿 데이',words:[['Today','오늘'],['is','~이다'],['a','하나의'],['good','좋은'],['day','날']],key:'good',examples:[['This is good.','이것은 좋아요.'],['Have a good day.','좋은 하루 보내세요.']],q:[['Today is a ___ day.','good'],['___ is a good day.','Today']]}
+  ]},
+  zh:{name:'중국어',lang:'zh-CN',items:[
+    {s:'我每天喝咖啡。',t:'나는 매일 커피를 마셔요.',p:'워 메이톈 허 카페이 · Wǒ měitiān hē kāfēi.',words:[['我','나'],['每天','매일'],['喝','마시다'],['咖啡','커피']],key:'喝',examples:[['我喝水。','나는 물을 마셔요.'],['他喝茶。','그는 차를 마셔요.']],q:[['我每天___咖啡。','喝'],['我每天喝___。','咖啡']]},
+    {s:'我在公园散步。',t:'나는 공원에서 산책해요.',p:'워 짜이 궁위안 싼부 · Wǒ zài gōngyuán sànbù.',words:[['我','나'],['在','~에서'],['公园','공원'],['散步','산책하다']],key:'散步',examples:[['我们一起散步。','우리는 함께 산책해요.'],['我喜欢散步。','나는 산책을 좋아해요.']],q:[['我在公园___。','散步'],['我在___散步。','公园']]},
+    {s:'今天天气很好。',t:'오늘은 날씨가 아주 좋아요.',p:'진톈 톈치 헌 하오 · Jīntiān tiānqì hěn hǎo.',words:[['今天','오늘'],['天气','날씨'],['很','매우'],['好','좋다']],key:'好',examples:[['这个很好。','이것은 아주 좋아요.'],['他很好。','그는 잘 지내요.']],q:[['今天___很好。','天气'],['今天天气很___。','好']]}
+  ]},
+  ja:{name:'일본어',lang:'ja-JP',items:[
+    {s:'毎朝コーヒーを飲みます。',t:'매일 아침 커피를 마셔요.',p:'마이아사 코오히이오 노미마스',words:[['毎朝','매일 아침'],['コーヒー','커피'],['を','~을/를'],['飲みます','마십니다']],key:'飲みます',examples:[['水を飲みます。','물을 마셔요.'],['お茶を飲みます。','차를 마셔요.']],q:[['毎朝コーヒーを___。','飲みます'],['毎朝___を飲みます。','コーヒー']]},
+    {s:'公園を散歩します。',t:'공원을 산책해요.',p:'코오엔오 산포시마스',words:[['公園','공원'],['を','~을/를'],['散歩します','산책합니다']],key:'散歩',examples:[['一緒に散歩します。','함께 산책해요.'],['朝、散歩します。','아침에 산책해요.']],q:[['___を散歩します。','公園'],['公園を___します。','散歩']]},
+    {s:'今日はいい天気です。',t:'오늘은 날씨가 좋아요.',p:'쿄오와 이이 텐키데스',words:[['今日','오늘'],['は','~은/는'],['いい','좋은'],['天気','날씨'],['です','~입니다']],key:'いい',examples:[['いい一日ですね。','좋은 하루네요.'],['これはいいです。','이것은 좋아요.']],q:[['今日は___天気です。','いい'],['今日はいい___です。','天気']]}
+  ]},
+  es:{name:'스페인어',lang:'es-ES',items:[
+    {s:'Bebo café cada mañana.',t:'나는 매일 아침 커피를 마셔요.',p:'베보 카페 카다 마냐나',words:[['Bebo','나는 마셔요'],['café','커피'],['cada','매'],['mañana','아침']],key:'bebo',examples:[['Bebo agua.','나는 물을 마셔요.'],['Bebo té.','나는 차를 마셔요.']],q:[['___ café cada mañana.','Bebo'],['Bebo ___ cada mañana.','café']]},
+    {s:'Camino en el parque.',t:'나는 공원에서 걸어요.',p:'카미노 엔 엘 파르케',words:[['Camino','나는 걸어요'],['en','~에서'],['el','그'],['parque','공원']],key:'camino',examples:[['Camino cada día.','나는 매일 걸어요.'],['Camino con Ana.','나는 아나와 걸어요.']],q:[['___ en el parque.','Camino'],['Camino en el ___.','parque']]},
+    {s:'Hoy es un buen día.',t:'오늘은 좋은 날이에요.',p:'오이 에스 운 부엔 디아',words:[['Hoy','오늘'],['es','~이다'],['un','하나의'],['buen','좋은'],['día','날']],key:'buen',examples:[['Es un buen libro.','좋은 책이에요.'],['Buen viaje.','좋은 여행 되세요.']],q:[['Hoy es un ___ día.','buen'],['___ es un buen día.','Hoy']]}
+  ]},
+  fr:{name:'프랑스어',lang:'fr-FR',items:[
+    {s:'Je bois du café chaque matin.',t:'나는 매일 아침 커피를 마셔요.',p:'즈 부아 뒤 카페 샤크 마탱',words:[['Je','나는'],['bois','마셔요'],['du','약간의'],['café','커피'],['chaque','매'],['matin','아침']],key:'bois',examples:[['Je bois de l’eau.','나는 물을 마셔요.'],['Je bois du thé.','나는 차를 마셔요.']],q:[['Je ___ du café chaque matin.','bois'],['Je bois du ___ chaque matin.','café']]},
+    {s:'Je marche dans le parc.',t:'나는 공원에서 걸어요.',p:'즈 마르슈 당 르 파르크',words:[['Je','나는'],['marche','걸어요'],['dans','~안에서'],['le','그'],['parc','공원']],key:'marche',examples:[['Je marche chaque jour.','나는 매일 걸어요.'],['Je marche avec Léa.','나는 레아와 걸어요.']],q:[['Je ___ dans le parc.','marche'],['Je marche dans le ___.','parc']]},
+    {s:'Aujourd’hui est un beau jour.',t:'오늘은 좋은 날이에요.',p:'오주르뒤 에 엉 보 주르',words:[['Aujourd’hui','오늘'],['est','~이다'],['un','하나의'],['beau','좋은'],['jour','날']],key:'beau',examples:[['C’est un beau livre.','그것은 좋은 책이에요.'],['Quel beau jardin !','정말 아름다운 정원이네요!']],q:[['Aujourd’hui est un ___ jour.','beau'],['Aujourd’hui est un beau ___.','jour']]}
+  ]}
+};
+const byId = id => document.getElementById(id);
+const date = new Date();
+const dayIndex = Math.floor(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())/86400000);
+byId('today').textContent = new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(date);
+let selected='en', current;
+function render(){
+ if ('speechSynthesis' in window) speechSynthesis.cancel();
+ const lang=data[selected]; current=lang.items[((dayIndex%lang.items.length)+lang.items.length)%lang.items.length];
+ byId('languages').replaceChildren();
+ Object.entries(data).forEach(([id,value])=>{const b=document.createElement('button');b.type='button';b.textContent=value.name;b.setAttribute('aria-pressed',String(id===selected));b.addEventListener('click',()=>{selected=id;render()});byId('languages').append(b)});
+ byId('sentence').textContent=current.s;byId('sentence').lang=lang.lang;byId('translation').textContent=current.t;byId('pronunciation').textContent='읽는 법: '+current.p;byId('voice-status').textContent='';
+ byId('vocab').replaceChildren();current.words.forEach(([word,meaning])=>{const li=document.createElement('li');const strong=document.createElement('strong');strong.textContent=word;li.append(strong,document.createTextNode(' : '+meaning));byId('vocab').append(li)});
+ byId('examples').replaceChildren();const key=document.createElement('p');key.textContent='중요 단어: '+current.key;byId('examples').append(key);current.examples.forEach(([s,t])=>{const div=document.createElement('div');div.className='example';const a=document.createElement('p');a.textContent=s;a.lang=lang.lang;const b=document.createElement('p');b.textContent=t;div.append(a,b);byId('examples').append(div)});
+ byId('questions').replaceChildren();current.q.forEach(([question],i)=>{const div=document.createElement('div');div.className='exercise';const label=document.createElement('label');label.htmlFor='answer-'+i;label.textContent=(i+1)+'. '+question;const input=document.createElement('input');input.id='answer-'+i;input.autocomplete='off';input.lang=lang.lang;div.append(label,input);byId('questions').append(div)});byId('result').textContent='';
+}
+function speak(rate){if(!('speechSynthesis' in window)){byId('voice-status').textContent='이 브라우저에서는 음성 재생을 지원하지 않습니다.';return}const u=new SpeechSynthesisUtterance(current.s);u.lang=data[selected].lang;u.rate=rate;const voices=speechSynthesis.getVoices();const voice=voices.find(v=>v.lang.toLowerCase()===u.lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(u.lang.slice(0,2).toLowerCase()));if(voice)u.voice=voice;else byId('voice-status').textContent='해당 언어 음성을 찾지 못했습니다. 기기 설정에 따라 재생이 달라질 수 있습니다.';u.onerror=()=>{byId('voice-status').textContent='음성을 재생하지 못했습니다. 기기의 음성 설정을 확인해 주세요.'};speechSynthesis.cancel();speechSynthesis.speak(u)}
+byId('listen').addEventListener('click',()=>speak(1));byId('slow').addEventListener('click',()=>speak(.7));
+byId('quiz').addEventListener('submit',e=>{e.preventDefault();const normalize=s=>s.trim().normalize('NFC').toLocaleLowerCase();const answers=current.q.map(([,answer],i)=>normalize(byId('answer-'+i).value)===normalize(answer));byId('result').textContent=answers.map((ok,i)=>(i+1)+'번 '+(ok?'정답':'다시 생각해 보세요')).join(' / ')});
+byId('show-answer').addEventListener('click',()=>{byId('result').textContent='정답: '+current.q.map(([,answer],i)=>(i+1)+'번 '+answer).join(' / ')});
+byId('reset').addEventListener('click',()=>{current.q.forEach((_,i)=>byId('answer-'+i).value='');byId('result').textContent='';byId('answer-0').focus()});
+render();
+</script>
+</body></html>
